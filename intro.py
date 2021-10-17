@@ -29,12 +29,14 @@ test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
 # can iterate as follows: train_features, train_labels = next(iter(train_dataloader))
 
-device = "cude" if torch.cuda.is_available() else "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
+        # A neural network is a module itself that consists of other modules (layers).
+        # This nested structure allows for building and managing complex architectures easily.
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(28*28, 512),
             nn.ReLU(),
@@ -66,21 +68,21 @@ def train(dataloader, model, loss_fn, optimizer):
         loss = loss_fn(pred, y)
 
         # Backpropogation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        optimizer.zero_grad() # reset the gradients of model parameters. Gradients by default add up; to prevent double-counting, we explicitly zero them at each iteration
+        loss.backward() # backpropagate the prediction loss. PyTorch deposits the gradients of the loss w.r.t. each parameter.
+        optimizer.step() # adjust the parameters by the gradients collected in the backward pass.
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test(dataloader, model, loss_fun):
+def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
     test_loss, correct = 0, 0
-    with torch.no_grad():
+    with torch.no_grad(): # model has already been trained, backprop is unnecessary
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
